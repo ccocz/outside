@@ -2,6 +2,10 @@
 
 # Disclaimer: Below some commands need root privileges
 
+set -e
+
+# Init setup
+
 echo "Updating essential packages"
 apt update -y
 apt upgrade -y
@@ -53,3 +57,101 @@ cp nftables.conf /etc/
 echo "Enabling and starting nftables"
 systemctl enable nftables
 service nftables start
+
+echo "Finished initial set-up"
+
+# Docker
+echo "Setting up Docker"
+
+echo "Installing software common properties"
+apt install software-properties-common -y
+
+echo "Installing curl"
+apt install curl -y
+
+echo "Installing gnugpg"
+apt install gnupg -y
+
+echo "Adding apt repo key"
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /tmp/docker
+gpg --dearmor /tmp/docker
+cp /tmp/docker.gpg /etc/apt/trusted.gpg.d/docker.gpg
+rm -rf /tmp/docker /tmp/docker.gpg
+
+echo "Installing docker-ce"
+apt update -y && apt install docker-ce aufs-tools- -y
+
+echo "Setting default docker DNS"
+echo "{
+  \"dns\": [
+     \"8.8.8.8\",
+     \"8.8.4.4\",
+     \"1.1.1.1\",
+     \"1.0.0.1\"
+  ]
+}" >> /etc/docker/daemon.json
+
+echo "Disabling iptables for Docker"
+echo "DOCKER_OPTS=\"--iptables=false\"" >> /etc/default/docker
+
+echo "Overriding Docker config"
+mkdir -p /etc/systemd/system/docker.service.d/
+echo "[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --iptables=false --ipv6 --bip 172.17.0.1/16 --fixed-cidr=172.17.0.0/16 --fixed-cidr-v6=2a01::/48
+ExecStartPost=/usr/sbin/nft -f /etc/nftables.conf" > /etc/systemd/system/docker.service.d/override.conf
+
+echo "Enabling and restarting Docker service"
+systemctl daemon-reload
+systemctl enable docker
+service docker restart
+
+echo "Adding sysadm to Docker group"
+usermod -a -G docker sysadm
+
+echo "Installing docker-compose"
+apt install libffi-dev -y
+apt install python3 python3-pip python3-setuptools -y
+pip3 install docker-compose
+
+echo "Restarting nftables and checking rules"
+service nftables restart
+nft list ruleset
+
+echo "Finished Docker installation"
+
+echo "Starting OutlineVPN installation"
+
+echo "Creating dedicated folder and creating config file"
+mkdir -p outline/
+cd outline/
+echo "version: '3.8'
+
+services:
+
+  outline:
+    image: morazow/outline-shadowsocks-server:1.3.5
+    container_name: outline
+    network_mode: host
+    volumes:
+      - \"./config.yml:/outline/config.yml:ro\"
+    restart: unless-stopped
+" > docker-compose.yml
+
+echo "Creating users with passwords"
+
+echo "keys:
+
+  - id: mor
+    port: 21
+    cipher: chacha20-ietf-poly1305
+    secret: u1337!
+" >> config.yml
+
+echo "Add \ntcp dport 21 counter accept\nudp dport 21 counter accept\nto /etc/nftables.conf and \nservice nftables restart\n"
+
+echo "Starting OutlineVPN"
+cd outline
+docker-compose up -d
+docker ps -a
