@@ -29,3 +29,27 @@ echo "$key" > /home/sysadm/.ssh/authorized_keys
 chmod 700 /home/sysadm/.ssh
 chmod 600 /home/sysadm/.ssh/authorized_keys
 chown -R sysadm:sysadm /home/sysadm
+
+echo "Backing up old SSH config file and replacing with new one"
+mv /etc/ssh/sshd_config sshd_config.bak
+cp sshd_config /etc/ssh/
+
+echo "Restarting SSH service"
+service sshd restart
+
+echo "Stopping and removing iptables"
+service iptables stop
+systemctl disable iptables
+apt remove --purge --auto-remove iptables -y
+
+echo "Installing nftables"
+apt update -y && apt install nftables -y
+
+echo "Backing up nftables config file"
+mv /etc/nftables.conf nftables.conf.bak
+
+cp nftables.conf /etc/
+
+echo "Enabling and starting nftables"
+systemctl enable nftables
+service nftables start
