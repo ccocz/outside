@@ -149,8 +149,6 @@ echo "keys:
     secret: u1337!
 " >> config.yml
 
-echo "Add \ntcp dport 21 counter accept\nudp dport 21 counter accept\nto /etc/nftables.conf and \nservice nftables restart\n"
-
 echo "Starting OutlineVPN"
 cd outline
 docker-compose up -d
