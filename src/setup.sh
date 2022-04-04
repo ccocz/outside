@@ -7,6 +7,7 @@ set -o errtrace -o nounset -o pipefail -o errexit
 if [ $# -eq 0 ]
   then
     echo "Usage: setup SERVER_IPV4"
+    exit 1
 fi
 
 # Init setup
@@ -40,8 +41,8 @@ chmod 600 /home/sysadm/.ssh/authorized_keys
 chown -R sysadm:sysadm /home/sysadm
 
 echo "Backing up old SSH config file and replacing with new one"
-mv /etc/ssh/sshd_config ../../conf/sshd_config.bak
-cp ../../conf/sshd_config /etc/ssh/
+mv /etc/ssh/sshd_config .../conf/sshd_config.bak
+cp ../conf/sshd_config /etc/ssh/
 
 echo "Restarting SSH service"
 service sshd restart
@@ -55,19 +56,19 @@ echo "Installing nftables"
 apt update -y && apt install nftables -y
 
 echo "Backing up nftables config file"
-mv /etc/nftables.conf ../../conf/nftables.conf.bak
+mv /etc/nftables.conf ../conf/nftables.conf.bak
 
-cp ../../conf/nftables.conf /etc/
+cp ../conf/nftables.conf /etc/
 
 echo "Finished initial set-up"
 
-chmod +x parts/docker.sh && parts/docker
+chmod +x ./parts/docker.sh && ./parts/docker.sh
 
-chmod +x parts/outline.sh && parts/outline.sh
+chmod +x ./parts/outline.sh && ./parts/outline.sh
 
-chmod +x parts/open.sh && parts/open.sh "$1"
+chmod +x ./parts/openvpn.sh && ./parts/openvpn.sh "$1"
 
-chmod +x parts/post_setup.sh && parts/post_setup.sh
+chmod +x ./parts/post_setup.sh && ./parts/post_setup.sh
 
 echo "Enabling and starting nftables (your SSH session might halt)"
 systemctl enable nftables

@@ -11,6 +11,7 @@ echo "OpenVPN installation started"
 
 apt install ca-certificates gnupg openssl
 apt install openvpn -y
+apt install wget -y
 
 wget -O /tmp/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.8/EasyRSA-3.0.8.tgz
 mkdir -p /etc/openvpn/easy-rsa
