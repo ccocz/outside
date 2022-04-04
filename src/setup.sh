@@ -41,7 +41,7 @@ chmod 600 /home/sysadm/.ssh/authorized_keys
 chown -R sysadm:sysadm /home/sysadm
 
 echo "Backing up old SSH config file and replacing with new one"
-mv /etc/ssh/sshd_config .../conf/sshd_config.bak
+mv /etc/ssh/sshd_config ../conf/sshd_config.bak
 cp ../conf/sshd_config /etc/ssh/
 
 echo "Restarting SSH service"
