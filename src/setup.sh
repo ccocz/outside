@@ -4,12 +4,6 @@
 
 set -o errtrace -o nounset -o pipefail -o errexit
 
-if [ $# -eq 0 ]
-  then
-    echo "Usage: setup SERVER_IPV4"
-    exit 1
-fi
-
 # Init setup
 
 echo "Updating essential packages"
@@ -66,9 +60,10 @@ chmod +x ./parts/docker.sh && ./parts/docker.sh
 
 chmod +x ./parts/outline.sh && ./parts/outline.sh
 
-chmod +x ./parts/openvpn.sh && ./parts/openvpn.sh "$1"
-
-chmod +x ./parts/post_setup.sh && ./parts/post_setup.sh
+curl -O https://raw.githubusercontent.com/angristan/openvpn-install/master/openvpn-install.sh
+chmod +x openvpn-install.sh
+mv openvpn-install.sh parts
+./parts/openvpn-install.sh
 
 echo "Enabling and starting nftables (your SSH session might halt)"
 systemctl enable nftables
